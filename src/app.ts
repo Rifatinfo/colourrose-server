@@ -10,7 +10,10 @@ import "./config/passport";
 
 const app: Application = express();
 app.use(cookieParser());
-
+app.use(
+  "/uploads",
+  express.static(path.join(process.cwd(), "uploads"))
+);
 app.use(passport.initialize());
 app.use(cors({
     origin: [config.FRONTEND_URL as string],
@@ -20,10 +23,6 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  "/uploads",
-  express.static(path.join(process.cwd(), "uploads"))
-);
 
 
 app.get('/', (req: Request, res: Response) => {

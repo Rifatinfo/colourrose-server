@@ -1,0 +1,107 @@
+model Product {
+  id                     String               @id @default(cuid())
+  name                   String
+  slug                   String               @unique
+  sku                    String               @unique
+  regularPrice           Float
+  salePrice              Float?
+  stockQuantity          Int
+  stockStatus            StockStatus          @default(IN_STOCK)
+  shortDescription       String?
+  fullDescription        String?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+
+  //============ Relations =============//
+
+  categories             ProductCategory[]
+  subCategories          ProductSubCategory[]
+  variants               Variant[]
+  images                 ProductImage[]
+  tags                   Tag[]
+  additionalInformation  AdditionalInfo[]
+
+  @@map("products")
+}
+
+//============ Category =============//
+
+model Category {
+  id       String       @id @default(cuid())
+  name     String
+  parentId String?      // For hierarchical categories
+  parent   Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[]   @relation("CategoryHierarchy")
+  products ProductCategory[]
+}
+
+model ProductCategory {
+  id         String   @id @default(cuid())
+  productId  String
+  categoryId String
+  product    Product  @relation(fields: [productId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([productId, categoryId])
+}
+
+//============ SubCategory =============//
+
+model SubCategory {
+  id       String       @id @default(cuid())
+  name     String
+  parentId String?
+  parent   SubCategory? @relation("SubCategoryHierarchy", fields: [parentId], references: [id])
+  children SubCategory[] @relation("SubCategoryHierarchy")
+  products ProductSubCategory[]
+}
+
+model ProductSubCategory {
+  id            String      @id @default(cuid())
+  productId     String
+  subCategoryId String
+  product       Product     @relation(fields: [productId], references: [id])
+  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
+
+  @@unique([productId, subCategoryId])
+}
+
+//============ ProductImage =============//
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  url       String
+}
+
+//============ Variant =============//
+
+model Variant {
+  id        String   @id @default(cuid())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  color     String?
+  size      String?
+  quantity  Int      @default(0)
+
+}
+
+
+//============ Tag =============//
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  products  Product[]
+}
+
+//============ AdditionalInfo =============//
+
+model AdditionalInfo {
+  id        String   @id @default(cuid())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  label     String
+  value     String
+}

@@ -1,0 +1,42 @@
+model Order {
+    id String @id @default(cuid())
+
+    userId String
+    user   User   @relation(fields: [userId], references: [id])
+
+    name    String
+    state   String
+    phone   String
+    address String
+
+    subtotal    Float
+    totalAmount Float
+
+    orderStatus   OrderStatus   @default(PENDING)
+    paymentStatus PaymentStatus @default(UNPAID)
+    paymentMethod PaymentMethod
+
+    items   OrderItem[]
+    payment Payment?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("orders")
+}
+
+model OrderItem {
+    id        String @id @default(cuid())
+    orderId   String
+    productId String
+
+    productName String
+    price       Float
+    quantity    Int
+    total       Float
+
+    order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    product Product @relation(fields: [productId], references: [id])
+
+    @@map("order_items")
+}

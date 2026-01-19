@@ -9,6 +9,8 @@ enum AuthType {
   GOOGLE
 }
 
+// ========= User Related ========//
+
 enum UserRole {
   CUSTOMER
   ADMIN
@@ -19,4 +21,26 @@ enum UserStatus {
   ACTIVE
   INACTIVE
   DELETED
+}
+
+// ========= Order Related ========//
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+  DELIVERED
+}
+
+// ========= Payment Related ========//
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  FAILED
+}
+
+enum PaymentMethod {
+  COD
+  SSLCOMMERZ
 }

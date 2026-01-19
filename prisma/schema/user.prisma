@@ -12,6 +12,7 @@ model User {
 
     customer Customer?
     admin    Admin?
+    orders Order[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

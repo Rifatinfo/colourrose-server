@@ -21,6 +21,7 @@ model Product {
   tags                   Tag[]
   additionalInformation  AdditionalInfo[]
 
+  orderItems OrderItem[]
   @@map("products")
 }
 

@@ -24,9 +24,26 @@ const login = async (payload: { email: string, password: string }) => {
         throw new AppError(StatusCodes.BAD_REQUEST, "Password is incorrect!")
     }
 
-    const accessToken = jwtHelper.generateToken({ email: user.email, role: user.role }, config.JWT_SECRET as Secret, config.ACCESS_TOKEN_EXPIRY as string);
+    const accessToken = jwtHelper.generateToken(
+        {
+            id: user.id,             
+            email: user.email,
+            role: user.role,
+        },
+        config.JWT_SECRET as Secret,
+        config.ACCESS_TOKEN_EXPIRY as string
+    );
 
-    const refreshToken = jwtHelper.generateToken({ email: user.email, role: user.role }, config.REFRESH_TOKEN_SECRET as Secret, config.REFRESH_TOKEN_EXPIRY as string);
+    const refreshToken = jwtHelper.generateToken(
+        {
+            id: user.id,              
+            email: user.email,
+            role: user.role,
+        },
+        config.REFRESH_TOKEN_SECRET as Secret,
+        config.REFRESH_TOKEN_EXPIRY as string
+    );
+
 
     return {
         accessToken,

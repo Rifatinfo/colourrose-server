@@ -3,6 +3,8 @@ import express, { NextFunction, Request, Response } from 'express';
 import { ProductController } from './product.controller';
 import { fileUploader } from '../../../utiles/fileUploader';
 import { createProductSchema } from './product.validation';
+import auth from '../../middlewares/auth';
+import { UserRole } from '@prisma/client';
 
 const router = express.Router();
 
@@ -27,34 +29,8 @@ router.post(
     ProductController.createProduct
 );
 
-// router.post(
-//     "/create",
-//     fileUploader.upload.array("file", 4),
-//     (req: Request, _res: Response, next: NextFunction) => {
-//         try {
-//             if (!req.body?.data) {
-//                 throw new Error("Product data missing");
-//             }
-
-//             const parsed =
-//                 typeof req.body.data === "string"
-//                     ? JSON.parse(req.body.data)
-//                     : req.body.data;
-
-//             req.body = createProductSchema.parse(parsed);
-
-//             next();
-//         } catch (error) {
-//             next(error);
-//         }
-//     },
-//     ProductController.createProduct
-// );
-
-
-
-router.get("/", ProductController.getAll);
+router.get("/", auth(UserRole.CUSTOMER, UserRole.CUSTOMER, UserRole.ADMIN), ProductController.getAll);
 router.get("/slug/:slug", ProductController.getProductBySlug);
-router.delete("/:productId", ProductController.deleteProduct);
+router.delete("/:productId", auth(UserRole.ADMIN), ProductController.deleteProduct);
 
 export const ProductRoutes = router;

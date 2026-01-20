@@ -1,10 +1,9 @@
 
-import express, { NextFunction, Request, Response } from 'express';
+import express from 'express';
 import { ProductController } from './product.controller';
 import { fileUploader } from '../../../utiles/fileUploader';
 import { createProductSchema } from './product.validation';
-import auth from '../../middlewares/auth';
-import { UserRole } from '@prisma/client';
+
 
 const router = express.Router();
 
@@ -29,8 +28,8 @@ router.post(
     ProductController.createProduct
 );
 
-router.get("/", auth(UserRole.CUSTOMER, UserRole.CUSTOMER, UserRole.ADMIN), ProductController.getAll);
+router.get("/", ProductController.getAll);
 router.get("/slug/:slug", ProductController.getProductBySlug);
-router.delete("/:productId", auth(UserRole.ADMIN), ProductController.deleteProduct);
+router.delete("/:productId",  ProductController.deleteProduct);
 
 export const ProductRoutes = router;

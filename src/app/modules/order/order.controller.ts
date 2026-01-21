@@ -14,8 +14,8 @@ export const createOrderController = catchAsync(
     }
 
     const userId = req.user!.id; 
-
-    const order = await OrderService.createOrderService(userId, req.body);
+    const userEmail = req.user!.email;
+    const order = await OrderService.createOrderService(userId, userEmail as string, req.body);
 
     sendResponse(res, {
       statusCode: StatusCodes.CREATED,

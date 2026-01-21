@@ -42,5 +42,5 @@ enum PaymentStatus {
 
 enum PaymentMethod {
   COD
-  SSLCOMMERZ
+  ONLINE
 }

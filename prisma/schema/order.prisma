@@ -1,28 +1,56 @@
+// model Order {
+//     id String @id @default(cuid())
+
+//     userId String
+//     user   User   @relation(fields: [userId], references: [id])
+
+//     name    String
+//     state   String
+//     phone   String
+//     address String
+
+//     subtotal    Float
+//     totalAmount Float
+
+//     orderStatus   OrderStatus   @default(PENDING)
+//     paymentStatus PaymentStatus @default(UNPAID)
+//     paymentMethod PaymentMethod
+
+//     items   OrderItem[]
+//     payment Payment?
+
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+
+//     @@map("orders")
+// }
+
 model Order {
-    id String @id @default(cuid())
+  id String @id @default(cuid())
 
-    userId String
-    user   User   @relation(fields: [userId], references: [id])
+  userId String
+  user   User @relation(fields: [userId], references: [id])
 
-    name    String
-    state   String
-    phone   String
-    address String
+  name    String
+  state   String
+  phone   String
+  address String
 
-    subtotal    Float
-    totalAmount Float
+  subtotal    Float
+  totalAmount Float
 
-    orderStatus   OrderStatus   @default(PENDING)
-    paymentStatus PaymentStatus @default(UNPAID)
-    paymentMethod PaymentMethod
+  orderStatus   OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(UNPAID)
+  paymentMethod PaymentMethod
 
-    items   OrderItem[]
-    payment Payment?
+  items   OrderItem[]
+  // Relation to Payment
+  payment Payment? @relation("OrderPayment") // optional one-to-one
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@map("orders")
+  @@map("orders")
 }
 
 model OrderItem {
@@ -35,8 +63,8 @@ model OrderItem {
     quantity    Int
     total       Float
 
-    color String? 
-    size  String? 
+    color String?
+    size  String?
 
     order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
     product Product @relation(fields: [productId], references: [id])

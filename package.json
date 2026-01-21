@@ -34,7 +34,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.0.1",
     "@types/express-session": "^1.18.2",
-    "axios": "^1.11.0",
+    "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.7.0",
     "cookie-parser": "^1.4.7",

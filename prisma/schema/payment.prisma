@@ -1,19 +1,51 @@
+// model Payment {
+//   id            String   @id @default(cuid())
+//   orderId       String   @unique
+
+//   transactionId String   @unique
+//   validationId  String?
+//   bankTranId    String?
+//   cardType      String?
+//   gatewayStatus String?
+
+//   amount        Float
+//   currency      String   @default("BDT")
+//   paidAt        DateTime?
+
+//   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+//   createdAt DateTime @default(now())
+
+//   @@map("payments")
+// }
+
+
 model Payment {
   id            String   @id @default(cuid())
+  
+  // Foreign key
   orderId       String   @unique
+  order         Order    @relation("OrderPayment", fields: [orderId], references: [id], onDelete: Cascade)
 
   transactionId String   @unique
   validationId  String?
   bankTranId    String?
-  cardType      String?
+
+  paymentStatus PaymentStatus @default(UNPAID)
   gatewayStatus String?
+  paymentMethod String?
+  cardType      String?
+  cardIssuer    String?
 
-  amount        Float
-  currency      String   @default("BDT")
-  paidAt        DateTime?
+  amount          Decimal  @db.Decimal(10,2)
+  storeAmount     Decimal? @db.Decimal(10,2)
+  currency        String   @default("BDT")
+  currencyAmount  Decimal? @db.Decimal(10,2)
 
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  riskLevel String?
+  riskTitle String?
 
+  paidAt    DateTime?
   createdAt DateTime @default(now())
 
   @@map("payments")

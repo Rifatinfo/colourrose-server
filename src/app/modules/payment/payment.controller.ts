@@ -3,8 +3,7 @@ import { catchAsync } from "../../middlewares/catchAsync"
 import config from "../../../config";
 import { PaymentService } from "./payment.service";
 import sendResponse from "../../middlewares/sendResponse";
-import { StatusCodes } from "http-status-codes";
-import AppError from "../../middlewares/AppError";
+import { SSLService } from "../sslCommerz/sslCommerz.service";
 
 const successPayment = catchAsync(async (req: Request, res: Response) => {
     const query = req.query as Record<string, string>;
@@ -49,9 +48,23 @@ const initPayment = catchAsync(async (req: Request & { user?: { id: string } }, 
     });
 });
 
+const validatePayment = catchAsync(
+    async (req: Request, res: Response) => {
+        console.log("sslcommerz ipn url body", req.body);
+        await SSLService.validatePayment(req.body)
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Payment Validated Successfully",
+            data: null,
+        });
+    }
+);
+
 export const PaymentController = {
     successPayment,
     failPayment,
     cancelPayment,
     initPayment,
+    validatePayment,
 }

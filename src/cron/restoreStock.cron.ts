@@ -26,38 +26,38 @@ export const startRestoreStockCron = () => {
         });
 
         for (const order of expiredOrders) {
-            for (const item of order.items) {
+            try {
+                await prisma.$transaction(async (tx) => {
+                    for (const item of order.items) {
 
-                //================  1. Restore PRODUCT stock ================//
-                await prisma.product.update({
-                    where: { id: item.productId },
-                    data: {
-                        stockQuantity: {
-                            increment: item.quantity,
-                        },
-                    },
-                });
-
-                //================  2. Restore VARIANT stock ================//
-                if (item.variantId) {
-                    await prisma.variant.update({
-                        where: { id: item.variantId },
-                        data: {
-                            quantity: {
-                                increment: item.quantity,
+                        //================  1. Restore PRODUCT stock ================//
+                        await tx.product.update({
+                            where: { id: item.productId },
+                            data: {
+                                stockQuantity: { increment: item.quantity },
                             },
-                        },
-                    });
-                }
-            }
+                        });
 
-            // ================ 3. Mark order as EXPIRED =================//
-            await prisma.order.update({
-                where: { id: order.id },
-                data: {
-                    orderStatus: OrderStatus.EXPIRED,
-                },
-            });
-        }
-    });
+                        //================  2. Restore VARIANT stock ================//
+                        if (item.variantId) {
+                            await tx.variant.update({
+                                where: { id: item.variantId },
+                                data: {
+                                    quantity: { increment: item.quantity },
+                                },
+                            });
+                        }
+                    }
+
+                    
+                    // ================ 3. Mark order as EXPIRED =================//
+                    await tx.order.update({
+                        where: { id: order.id },
+                        data: { orderStatus: OrderStatus.EXPIRED },
+                    });
+                });
+            } catch (error) {
+                console.error(`Failed to restore stock for order ${order.id}:`, error);
+            }
+        }    });
 };

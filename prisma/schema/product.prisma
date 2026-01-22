@@ -80,12 +80,14 @@ model ProductImage {
 
 model Variant {
   id        String   @id @default(cuid())
-  product   Product  @relation(fields: [productId], references: [id])
   productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   color     String?
   size      String?
   quantity  Int      @default(0)
 
+
+  orderItems OrderItem[]
 }
 
 

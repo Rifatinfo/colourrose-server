@@ -1,24 +1,3 @@
-// model Payment {
-//   id            String   @id @default(cuid())
-//   orderId       String   @unique
-
-//   transactionId String   @unique
-//   validationId  String?
-//   bankTranId    String?
-//   cardType      String?
-//   gatewayStatus String?
-
-//   amount        Float
-//   currency      String   @default("BDT")
-//   paidAt        DateTime?
-
-//   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-//   createdAt DateTime @default(now())
-
-//   @@map("payments")
-// }
-
 
 model Payment {
   id            String   @id @default(cuid())
@@ -46,6 +25,8 @@ model Payment {
   riskTitle String?
 
   paidAt    DateTime?
+  cancelledAt DateTime?
+  failedAt DateTime?
   createdAt DateTime @default(now())
 
   @@map("payments")

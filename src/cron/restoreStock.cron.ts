@@ -17,7 +17,7 @@ export const startRestoreStockCron = () => {
                 },
                 orderStatus: OrderStatus.PENDING,
                 createdAt: {
-                      lt: new Date(Date.now() - 30 * 60 * 1000), // 30 min
+                    lt: new Date(Date.now() - 30 * 60 * 1000), // 30 min
                 },
             },
             include: {
@@ -49,7 +49,7 @@ export const startRestoreStockCron = () => {
                         }
                     }
 
-                    
+
                     // ================ 3. Mark order as EXPIRED =================//
                     await tx.order.update({
                         where: { id: order.id },
@@ -59,5 +59,6 @@ export const startRestoreStockCron = () => {
             } catch (error) {
                 console.error(`Failed to restore stock for order ${order.id}:`, error);
             }
-        }    });
+        }
+    });
 };

@@ -2,6 +2,9 @@ import { Request, Response } from "express"
 import { catchAsync } from "../../middlewares/catchAsync"
 import config from "../../../config";
 import { PaymentService } from "./payment.service";
+import sendResponse from "../../middlewares/sendResponse";
+import { StatusCodes } from "http-status-codes";
+import AppError from "../../middlewares/AppError";
 
 const successPayment = catchAsync(async (req: Request, res: Response) => {
     const query = req.query as Record<string, string>;
@@ -34,9 +37,21 @@ const cancelPayment = catchAsync(async (req: Request, res: Response) => {
         `${config.SSL_CANCEL_FRONTEND_URL}?transactionId=${query.transactionId}&message=${result.message}&status=cancel`
     );
 });
+const initPayment = catchAsync(async (req: Request & { user?: { id: string } }, res: Response) => {
+    const { orderId } = req.params;
+    const result = await PaymentService.initPayment(orderId);
+
+    sendResponse(res, {
+        statusCode: 201,
+        success: true,
+        message: "Payment initiated successfully",
+        data: result,
+    });
+});
 
 export const PaymentController = {
     successPayment,
     failPayment,
-    cancelPayment
+    cancelPayment,
+    initPayment,
 }

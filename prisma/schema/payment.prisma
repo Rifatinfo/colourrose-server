@@ -15,7 +15,7 @@ model Payment {
   paymentMethod String?
   cardType      String?
   cardIssuer    String?
-
+  paymentGatewayData Json?
   amount          Decimal  @db.Decimal(10,2)
   storeAmount     Decimal? @db.Decimal(10,2)
   currency        String   @default("BDT")

@@ -15,7 +15,7 @@
     "postinstall": "prisma generate --schema=./prisma/schema"
   },
   "devDependencies": {
-    "@prisma/client": "^7.0.1",
+    "@prisma/client": "^7.3.0",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
@@ -27,7 +27,7 @@
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/passport-local": "^1.0.38",
     "@types/pg": "^8.15.6",
-    "prisma": "^7.0.1",
+    "prisma": "^7.3.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   },

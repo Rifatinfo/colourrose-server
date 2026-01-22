@@ -30,6 +30,8 @@ enum OrderStatus {
   CONFIRMED
   CANCELED
   DELIVERED
+  FAILED
+  EXPIRED
 }
 
 // ========= Payment Related ========//
@@ -38,6 +40,7 @@ enum PaymentStatus {
   UNPAID
   PAID
   FAILED
+  CANCELED
 }
 
 enum PaymentMethod {

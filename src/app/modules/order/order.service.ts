@@ -147,7 +147,7 @@ export const createOrderService = async (
             phone: result.phone,
             address: result.address,
         };
-        console.log(sslPayload);
+
         const sslResponse = await SSLService.sslPaymentInit(sslPayload);
 
         return {

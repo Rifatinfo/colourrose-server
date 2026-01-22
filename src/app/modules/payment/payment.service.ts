@@ -92,7 +92,7 @@ const failPayment = async (query: Record<string, string>) => {
             where: { id: payment.orderId },
             data: {
                 paymentStatus: PaymentStatus.FAILED,
-                orderStatus: OrderStatus.FAILED
+                orderStatus: OrderStatus.PENDING
             },
         });
     });
@@ -137,7 +137,7 @@ const cancelPayment = async (query: Record<string, string>) => {
             where: { id: payment.orderId },
             data: {
                 paymentStatus: PaymentStatus.CANCELED,
-                orderStatus: OrderStatus.CANCELED,
+                orderStatus: OrderStatus.PENDING,
             },
         });
     });

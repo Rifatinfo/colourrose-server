@@ -62,6 +62,7 @@ export const createOrderService = async (
                 return {
                     productId: product.id,
                     productName: product.name,
+                    variantId: variant.id,
                     price,
                     quantity: item.quantity,
                     total,

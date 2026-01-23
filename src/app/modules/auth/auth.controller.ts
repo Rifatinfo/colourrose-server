@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { catchAsync } from "../../middlewares/catchAsync";
 import sendResponse from "../../middlewares/sendResponse";
 import { AuthService } from "./auth.service";
-import { User } from "@prisma/client";
+import { User, UserRole } from "@prisma/client";
 import AppError from "../../middlewares/AppError";
 import { StatusCodes } from "http-status-codes";
 import { createUserTokens } from "../../../utiles/createUserTokens";
@@ -40,8 +40,8 @@ const login = catchAsync(async (req: Request, res: Response ) => {
 
 const googleCallbackController = catchAsync(async (req: Request, res: Response) => {
   // 1. Get the user attached by Passport
-  const user = req.user;
-  console.log(user);
+  const user = req.user ;
+
   
   if (!user) {
     throw new AppError(StatusCodes.UNAUTHORIZED, "Authentication failed");
@@ -54,14 +54,14 @@ const googleCallbackController = catchAsync(async (req: Request, res: Response) 
   setAuthCookie(res, tokenInfo);
 
   // 4. Handle Redirect State
-  // Passport passes the 'state' parameter back in the query
-  let redirectUrl = (req.query.state as string) || "/checkout";
+  let redirectUrl = (req.query.state as string) || "/";
   if (redirectUrl.startsWith("/")) {
     redirectUrl = redirectUrl.slice(1);
   }
-
-  res.redirect(`${config.FRONTEND_URL}/${redirectUrl}`);
+  console.log("OAuth state:", req.query.state);
+  res.redirect(`${config.FRONTEND_URL}/${redirectUrl}?loggedIn=true`);
 });
+
 
 export const AuthController = {
     login,

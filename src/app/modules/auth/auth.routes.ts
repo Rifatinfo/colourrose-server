@@ -11,7 +11,7 @@ router.get(
   (req, res, next) => {
 
     // Capture the target frontend page if passed as a query param
-    const state = req.query.redirect as string || "/checkout"; 
+    const state = req.query.redirect as string || "/"; 
     passport.authenticate("google", {
       scope: ["profile", "email"], //========== Explicitly define scopes here ==========//
       state: state,                //========== Pass state to maintain redirect URL ==========//

@@ -2,7 +2,7 @@
 
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile, VerifyCallback } from "passport-google-oauth20";
-import { AuthType, UserRole , User} from "@prisma/client";
+import { AuthType, UserRole } from "@prisma/client";
 import prisma from "../shared/prisma";
 import config from "../config";
 

@@ -8,7 +8,13 @@ import { Secret } from "jsonwebtoken";
 const auth = (...roles: string[]) => {
     return async (req: Request & { user?: any }, res: Response, next: NextFunction) => {
         try {
-            const token = req.headers.authorization || req.cookies.accessToken;
+            // const token = req.headers.authorization || req.cookies.accessToken;
+            const authHeader = req.headers.authorization;
+
+            const token =
+                authHeader?.startsWith("Bearer ")
+                    ? authHeader.split(" ")[1] // 🔥 extract token
+                    : req.cookies.accessToken;
             console.log({ token }, "form auth guard");
 
             if (!token) {
@@ -16,12 +22,12 @@ const auth = (...roles: string[]) => {
             }
 
             const verifiedUser = jwtHelper.verifyToken(token, config.JWT_SECRET as Secret);
+
             req.user = {
-                id: verifiedUser.id,       
+                id: verifiedUser.id, 
                 role: verifiedUser.role,
-                email: verifiedUser.email,
+                email: verifiedUser.email ?? null,
             };
-            console.log(req.user);
 
             if (roles.length && !roles.includes(verifiedUser.role)) {
                 throw new AppError(StatusCodes.FORBIDDEN, "You are not allowed to access this resource");

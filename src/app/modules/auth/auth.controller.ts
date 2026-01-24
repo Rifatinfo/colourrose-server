@@ -41,7 +41,8 @@ const login = catchAsync(async (req: Request, res: Response ) => {
 const googleCallbackController = catchAsync(async (req: Request, res: Response) => {
   // 1. Get the user attached by Passport
   const user = req.user ;
-
+  console.log(user);
+  
   
   if (!user) {
     throw new AppError(StatusCodes.UNAUTHORIZED, "Authentication failed");
@@ -55,6 +56,8 @@ const googleCallbackController = catchAsync(async (req: Request, res: Response) 
 
   // 4. Handle Redirect State
   let redirectUrl = (req.query.state as string) || "/";
+  console.log(redirectUrl);
+  
   if (redirectUrl.startsWith("/")) {
     redirectUrl = redirectUrl.slice(1);
   }

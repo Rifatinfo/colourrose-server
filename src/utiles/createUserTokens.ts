@@ -4,10 +4,12 @@ import { User } from "@prisma/client";
 
 export const createUserTokens = (user: User) => {
   const payload = {
-    userId: user.id,
+    id: user.id,
     role: user.role,
+    email: user.email,
   };
-
+  console.log("frontend payload", payload);
+  
   const accessToken = jwtHelper.generateToken(
     payload,
     config.JWT_SECRET as string,

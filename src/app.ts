@@ -17,7 +17,8 @@ app.use(
 app.use(passport.initialize());
 app.use(cors({
     origin: [config.FRONTEND_URL as string],
-    credentials: true
+    credentials: true,
+    // allowedHeaders: ["Content-Type", "Authorization"],
 }));
 //parser
 app.use(express.json());

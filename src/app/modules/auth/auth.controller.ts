@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { catchAsync } from "../../middlewares/catchAsync";
 import sendResponse from "../../middlewares/sendResponse";
 import { AuthService } from "./auth.service";
-import { User, UserRole } from "@prisma/client";
 import AppError from "../../middlewares/AppError";
 import { StatusCodes } from "http-status-codes";
 import { createUserTokens } from "../../../utiles/createUserTokens";

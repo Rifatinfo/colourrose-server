@@ -1,29 +1,3 @@
-// model Order {
-//     id String @id @default(cuid())
-
-//     userId String
-//     user   User   @relation(fields: [userId], references: [id])
-
-//     name    String
-//     state   String
-//     phone   String
-//     address String
-
-//     subtotal    Float
-//     totalAmount Float
-
-//     orderStatus   OrderStatus   @default(PENDING)
-//     paymentStatus PaymentStatus @default(UNPAID)
-//     paymentMethod PaymentMethod
-
-//     items   OrderItem[]
-//     payment Payment?
-
-//     createdAt DateTime @default(now())
-//     updatedAt DateTime @updatedAt
-
-//     @@map("orders")
-// }
 
 model Order {
   id String @id @default(cuid())

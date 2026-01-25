@@ -58,9 +58,25 @@ const deleteProduct = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+
+/*=============================================================================================*/   
+//======================= New Controller: Get Best Selling Products  ==========================//
+/*=============================================================================================*/
+
+const getBestSellingProducts = catchAsync(async (req: Request, res: Response) => {
+  const result = await ProductService.getBestSellingProducts();
+
+  res.status(200).json({
+    success: true,
+    message: "Best selling products retrieved successfully",
+    data: result,
+  });
+});
+
 export const ProductController = {
     createProduct,
     getAll,
     getProductBySlug,
-    deleteProduct
+    deleteProduct,
+    getBestSellingProducts
 }

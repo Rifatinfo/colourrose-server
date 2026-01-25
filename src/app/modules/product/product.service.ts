@@ -266,9 +266,47 @@ const deleteProduct = async (productId: string) => {
     });
 };
 
+
+const getBestSellingProducts = async () => {
+   //=============== GET TOP 3 PRODUCTS FROM ORDER ITEMS ================//
+    const bestSelling = await prisma.orderItem.groupBy({
+        by: ['productId'],
+        _sum: { quantity: true },
+        orderBy: {
+            _sum: { quantity: 'desc' }
+        },
+        take: 3,
+    });
+    
+    const productIds = bestSelling.map(item => item.productId);
+
+    // Fetch full product data for these product IDs
+    const products = await prisma.product.findMany({
+        where: { id: { in: productIds } },
+        include: {
+            categories: true,
+            subCategories: true,
+            variants: true,
+            images: true,
+            additionalInformation: true,
+            tags: true,
+        }
+    });
+
+    // Attach the sold quantity to each product
+    return products.map(product => {
+        const soldItem = bestSelling.find(item => item.productId === product.id);
+        return {
+            ...product,
+            soldQuantity: soldItem?._sum.quantity || 0,
+        };
+    });
+}
+
 export const ProductService = {
     createProduct,
     getProducts,
     getProductBySlug,
-    deleteProduct
+    deleteProduct,
+    getBestSellingProducts
 }

@@ -23,7 +23,7 @@ model Payment {
 
   riskLevel String?
   riskTitle String?
-
+  invoiceUrl String?
   paidAt    DateTime?
   cancelledAt DateTime?
   failedAt DateTime?

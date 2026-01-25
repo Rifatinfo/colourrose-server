@@ -29,4 +29,9 @@ export default {
     SSL_FAIL_FRONTEND_URL: process.env.SSL_FAIL_FRONTEND_URL,
     SSL_CANCEL_FRONTEND_URL: process.env.SSL_CANCEL_FRONTEND_URL,
     SSL_IPN_URL: process.env.SSL_IPN_URL,
+    SMTP_HOST : process.env.SMTP_HOST,
+    SMTP_PORT : process.env.SMTP_PORT,
+    SMTP_USER : process.env.SMTP_USER,
+    SMTP_PASS : process.env.SMTP_PASS,
+    SMTP_FROM : process.env.SMTP_FROM,
 }

@@ -34,3 +34,6 @@ router.delete("/:productId",  ProductController.deleteProduct);
 router.get("/best-selling", ProductController.getBestSellingProducts);
 
 export const ProductRoutes = router;
+
+
+

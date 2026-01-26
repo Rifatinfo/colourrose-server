@@ -137,6 +137,13 @@ export const createOrderService = async (
         return { ...order, deliveryType, deliveryCharge, payment };
     });
 
+
+    // =====================================================
+    //  IMPORTANT PART — INVOICE FOR CASH ON DELIVERY
+    // =====================================================
+
+
+
     // ================== OUTSIDE DB TRANSACTION ==================
     // IMPORTANT: External API call must be outside prisma.$transaction
     if (paymentMethod === "ONLINE" && result.payment) {

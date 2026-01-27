@@ -8,6 +8,7 @@ import { PaymentMethod, PaymentStatus } from "@prisma/client";
 import { SSLService } from "../sslCommerz/sslCommerz.service";
 import { generateInvoice } from "../../../utiles/invoice";
 import { sendEmail } from "../../../utiles/sendEmail";
+import { parseDeliveryType } from "../../../utiles/parseDeliveryType";
 
 const getTransactionId = () => {
     return 'TXN_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
@@ -84,7 +85,8 @@ export const createOrderService = async (
                 phone: deliveryInfo.phone,
                 state: deliveryInfo.state,
                 address: deliveryInfo.address,
-
+                deliveryCharge,
+                deliveryType: parseDeliveryType(deliveryType),
                 subtotal,
                 totalAmount,
                 paymentMethod: payload.paymentMethod === "ONLINE" ? PaymentMethod.ONLINE : PaymentMethod.COD,
@@ -156,6 +158,8 @@ export const createOrderService = async (
             paymentStatus: result.paymentStatus,
             subtotal: result.subtotal,
             totalAmount: result.totalAmount,
+            deliveryType: result.deliveryType,
+            deliveryCharge: result.deliveryCharge,
             createdAt: result.createdAt,
 
             items: result.items.map((item) => ({

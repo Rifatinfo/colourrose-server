@@ -4,6 +4,9 @@ import prisma from "../../../shared/prisma";
 import { OrderStatus, PaymentStatus } from "@prisma/client";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import { SSLService } from "../sslCommerz/sslCommerz.service";
+import { generateInvoice } from "../../../utiles/invoice";
+import { sendEmail } from "../../../utiles/sendEmail";
+import { parseDeliveryType } from "../../../utiles/parseDeliveryType";
 
 
 const successPayment = async (query: Record<string, string>) => {
@@ -14,7 +17,15 @@ const successPayment = async (query: Record<string, string>) => {
 
     //================ FIND PAYMENT ================//
     const payment = await prisma.payment.findUnique({
-        where: { transactionId }
+        where: { transactionId },
+        include: {
+            order: {
+                include: {
+                    items: true,
+                    user: true
+                }
+            }
+        }
     });
 
     if (!payment) {
@@ -50,6 +61,58 @@ const successPayment = async (query: Record<string, string>) => {
                 orderStatus: OrderStatus.CONFIRMED
             }
         })
+    });
+    const order = payment.order;
+    console.log(order.deliveryType);
+    
+    //================ GENERATE INVOICE =================//
+    const pdfBuffer = await generateInvoice({
+        id: order.id,
+        name: order.name,
+        phone: order.phone,
+        address: order.address,
+        state: order.state,
+        paymentMethod: "Online Payment (SSLCommerz)",
+        paymentStatus: "PAID",
+        deliveryType: order.deliveryType === "OUTSIDE_DHAKA" ? "outside_dhaka" : "inside_dhaka",       
+        deliveryCharge: Number(order.deliveryCharge), 
+        subtotal: order.subtotal,
+        totalAmount: order.totalAmount,
+        createdAt: order.createdAt,
+        items: order.items.map((item) => ({
+            productName: item.productName,
+            price: item.price,
+            quantity: item.quantity,
+            total: item.total,
+            color: item.color,
+            size: item.size,
+        })),
+    });
+
+
+    //================ SEND EMAIL =================//
+    await sendEmail({
+        to: order.user?.email || "",
+        subject: "Payment Successful - Order Invoice",
+        templateName: "order-confirmation",
+        templateData: {
+            name: order.name,
+            orderId: order.id,
+            totalAmount: order.totalAmount,
+            address: `${order.address}, ${order.state}`,
+            items: order.items,
+            subtotal: order.subtotal,
+            shipping: order.deliveryCharge,
+            paymentMethod: "Online (SSLCommerz)",
+            paymentStatus: "Paid",
+        },
+        attachments: [
+            {
+                filename: `invoice-${order.id}.pdf`,
+                content: pdfBuffer,
+                contentType: "application/pdf",
+            },
+        ],
     });
 
     return {
@@ -167,7 +230,7 @@ const initPayment = async (orderId: string) => {
     //=============== 3 Prepare SSLCommerz payload ==================//
     const sslPayload: ISSLCommerz = {
         name: order.name,
-        email: (order.user as any)?.email || "",      
+        email: (order.user as any)?.email || "",
         phone: order.phone,
         address: order.address,
         totalAmount: Number(payment.amount),

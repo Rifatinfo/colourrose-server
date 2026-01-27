@@ -17,6 +17,8 @@ model Order {
   paymentStatus PaymentStatus @default(UNPAID)
   paymentMethod PaymentMethod
 
+  deliveryCharge Decimal?
+  deliveryType   DeliveryType?
   items   OrderItem[]
   // Relation to Payment
   payment Payment?    @relation("OrderPayment") // optional one-to-one

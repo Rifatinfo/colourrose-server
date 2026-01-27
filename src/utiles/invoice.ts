@@ -11,6 +11,8 @@ export type OrderWithItems = {
   state: string;
   paymentMethod: string;
   paymentStatus: string;
+  deliveryCharge: number;
+  deliveryType: string;
   subtotal: number;
   totalAmount: number;
   createdAt: Date;
@@ -128,8 +130,6 @@ export const generateInvoice = async (order: OrderWithItems): Promise<Buffer> =>
   /* =========================
       TOTALS
   ========================== */
-  y += 10;
-
   doc
     .fontSize(10)
     .text("Subtotal", 360, y)
@@ -138,10 +138,19 @@ export const generateInvoice = async (order: OrderWithItems): Promise<Buffer> =>
   y += 15;
 
   doc
+    .fontSize(10)
+    .text(`${order.deliveryType}`, 360, y)
+    .text(`${order.deliveryCharge.toFixed(2)} TK`, 460, y);
+
+  y += 15;
+
+  doc
     .font("Helvetica-Bold")
+    .fontSize(11)
     .text("Total", 360, y)
     .text(`${order.totalAmount.toFixed(2)} TK`, 460, y)
     .font("Helvetica");
+
 
   /* =========================
       PAYMENT INFO (BOX STYLE)

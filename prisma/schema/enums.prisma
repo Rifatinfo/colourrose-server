@@ -47,3 +47,8 @@ enum PaymentMethod {
   COD
   ONLINE
 }
+
+enum DeliveryType {
+  INSIDE_DHAKA
+  OUTSIDE_DHAKA
+}

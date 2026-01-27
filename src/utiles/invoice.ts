@@ -1,89 +1,106 @@
-import PDFDocument from "pdfkit"
-import fs from "fs"
-import path from "path"
+import PDFDocument from "pdfkit";
+import fs from "fs";
+import path from "path";
+import { PassThrough } from "stream";
 
-type OrderWithItems = {
-  id: string
-  name: string
-  phone: string
-  address: string
-  state: string
-  paymentMethod: string
-  subtotal: number
-  totalAmount: number
-  createdAt: Date
+export type OrderWithItems = {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  state: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  subtotal: number;
+  totalAmount: number;
+  createdAt: Date;
   items: {
-    productName: string
-    price: number
-    quantity: number
-    total: number
-    color?: string | null
-    size?: string | null
-  }[]
-}
+    productName: string;
+    price: number;
+    quantity: number;
+    total: number;
+    color?: string | null;
+    size?: string | null;
+  }[];
+};
 
+/**
+ * Generates an invoice PDF and returns it as a Buffer
+ * without using get-stream
+ */
+export const generateInvoice = async (order: OrderWithItems): Promise<Buffer> => {
+  const doc = new PDFDocument({ margin: 40, size: "A4" });
 
-export const generateInvoice = async (
-  order: OrderWithItems,
-  filePath: string
-) => {
-  const doc = new PDFDocument({ margin: 40 })
+  const stream = new PassThrough();
+  const chunks: Buffer[] = [];
+  stream.on("data", (chunk) => chunks.push(chunk));
 
-  doc.pipe(fs.createWriteStream(filePath))
+  const endPromise = new Promise<Buffer>((resolve, reject) => {
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("error", reject);
+  });
+
+  doc.pipe(stream);
 
   /* =========================
-     HEADER
+      HEADER (Company + Invoice)
   ========================== */
-  const logoPath = path.join(process.cwd(), "src/assets/logo.png")
-
+  const logoPath = path.join(process.cwd(), "src/assets/logo.png");
   if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, 40, 40, { width: 120 })
+    doc.image(logoPath, 40, 40, { width: 110 });
   }
 
   doc
-    .fontSize(20)
-    .text("INVOICE", 400, 45, { align: "right" })
-    .fontSize(10)
-    .text(`Invoice No: ${order.id}`, { align: "right" })
-    .text(`Date: ${order.createdAt.toDateString()}`, {
-      align: "right",
-    })
+    .fontSize(14)
+    .text("Colourrose", 40, 160)
+    .fontSize(9)
+    .text("89/1 Holan, Dakshinkhan, Dhaka");
 
-  doc.moveDown(3)
+  doc
+    .fontSize(20)
+    .text("INVOICE", 400, 40, { align: "right" })
+    .fontSize(9)
+    .text(`Invoice Date: ${order.createdAt.toDateString()}`, { align: "right" })
+    .text(`Order Number: ${order.id}`, { align: "right" });
+
+  doc.moveDown(2);
 
   /* =========================
-     CUSTOMER INFO
+      BILLING INFO
   ========================== */
   doc
-    .fontSize(12)
-    .text("Bill To:", { underline: true })
-    .moveDown(0.5)
     .fontSize(10)
+    .font("Helvetica-Bold")
+    .text("Bill To")
+    .font("Helvetica")
+    .moveDown(0.3)
     .text(order.name)
-    .text(order.phone)
     .text(order.address)
     .text(order.state)
+    .text(order.phone);
 
-  doc.moveDown(2)
+  doc.moveDown(2);
 
   /* =========================
-     TABLE HEADER
+      TABLE HEADER
   ========================== */
-  const tableTop = doc.y
+  const tableTop = doc.y;
 
   doc
+    .font("Helvetica-Bold")
     .fontSize(10)
     .text("Product", 40, tableTop)
-    .text("Qty", 280, tableTop)
-    .text("Price", 330, tableTop)
-    .text("Total", 430, tableTop)
+    .text("Qty", 300, tableTop)
+    .text("Price", 360, tableTop)
+    .text("Total", 460, tableTop);
 
-  doc.moveTo(40, tableTop + 15).lineTo(550, tableTop + 15).stroke()
+  doc.moveTo(40, tableTop + 15).lineTo(550, tableTop + 15).stroke();
+  doc.font("Helvetica");
 
   /* =========================
-     TABLE ROWS
+      TABLE ROWS
   ========================== */
-  let y = tableTop + 25
+  let y = tableTop + 25;
 
   order.items.forEach((item) => {
     const variant = [
@@ -91,53 +108,63 @@ export const generateInvoice = async (
       item.size ? `Size: ${item.size}` : "",
     ]
       .filter(Boolean)
-      .join(", ")
+      .join(", ");
 
     doc
       .fontSize(9)
       .text(
-        `${item.productName}${variant ? ` (${variant})` : ""}`,
+        `${item.productName}${variant ? `\n${variant}` : ""}`,
         40,
         y,
-        { width: 220 }
+        { width: 240 }
       )
-      .text(item.quantity.toString(), 280, y)
-      .text(`${item.price.toFixed(2)} ৳`, 330, y)
-      .text(`${item.total.toFixed(2)} ৳`, 430, y)
+      .text(item.quantity.toString(), 300, y)
+      .text(`${item.price.toFixed(2)} TK`, 360, y)
+      .text(`${item.total.toFixed(2)} TK`, 460, y);
 
-    y += 25
-  })
-
-  doc.moveDown(2)
+    y += variant ? 35 : 25;
+  });
 
   /* =========================
-     TOTALS
+      TOTALS
   ========================== */
+  y += 10;
+
   doc
     .fontSize(10)
-    .text(`Subtotal:`, 350, y)
-    .text(`${order.subtotal.toFixed(2)} ৳`, 450, y)
+    .text("Subtotal", 360, y)
+    .text(`${order.subtotal.toFixed(2)} TK`, 460, y);
 
-  y += 15
+  y += 15;
 
   doc
     .font("Helvetica-Bold")
-    .text(`Total:`, 350, y)
-    .text(`${order.totalAmount.toFixed(2)} ৳`, 450, y)
-
-  doc.font("Helvetica")
+    .text("Total", 360, y)
+    .text(`${order.totalAmount.toFixed(2)} TK`, 460, y)
+    .font("Helvetica");
 
   /* =========================
-     PAYMENT INFO
+      PAYMENT INFO (BOX STYLE)
   ========================== */
-  doc.moveDown(3)
+  y += 40;
+
   doc
+    .rect(40, y, 510, 60)
+    .stroke();
+
+  doc
+    .fontSize(10)
+    .font("Helvetica-Bold")
+    .text("Payment Information", 50, y + 8);
+
+  doc
+    .font("Helvetica")
     .fontSize(9)
-    .text(`Payment Method: ${order.paymentMethod}`)
-    .text("Thank you for your purchase!")
+    .text(`Payment Method: ${order.paymentMethod}`, 50, y + 28)
+    .text(`Payment Status: ${order.paymentStatus}`, 300, y + 28);
 
   /* =========================
-     FOOTER
+      FOOTER
   ========================== */
   doc
     .fontSize(8)
@@ -145,9 +172,10 @@ export const generateInvoice = async (
     .text(
       "This is a system generated invoice. No signature required.",
       40,
-      760,
+      770,
       { align: "center" }
-    )
+    );
 
-  doc.end()
-}
+  doc.end();
+  return endPromise;
+};

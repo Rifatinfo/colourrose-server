@@ -6,6 +6,8 @@ import prisma from "../../../shared/prisma";
 import { Decimal } from "@prisma/client/runtime/client";
 import { PaymentMethod, PaymentStatus } from "@prisma/client";
 import { SSLService } from "../sslCommerz/sslCommerz.service";
+import { generateInvoice } from "../../../utiles/invoice";
+import { sendEmail } from "../../../utiles/sendEmail";
 
 const getTransactionId = () => {
     return 'TXN_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
@@ -141,7 +143,55 @@ export const createOrderService = async (
     // =====================================================
     //  IMPORTANT PART — INVOICE FOR CASH ON DELIVERY
     // =====================================================
+    if (paymentMethod === "COD") {
 
+        //  Generate PDF (BUFFER)
+        const pdfBuffer = await generateInvoice({
+            id: result.id,
+            name: result.name,
+            phone: result.phone,
+            address: result.address,
+            state: result.state,
+            paymentMethod: "Cash on Delivery",
+            paymentStatus: result.paymentStatus,
+            subtotal: result.subtotal,
+            totalAmount: result.totalAmount,
+            createdAt: result.createdAt,
+
+            items: result.items.map((item) => ({
+                productName: item.productName,
+                price: item.price,
+                quantity: item.quantity,
+                total: item.total,
+                color: item.color,
+                size: item.size,
+            })),
+        });
+
+        // 🔹 Send email with invoice attached
+        await sendEmail({
+            to: userEmail,
+            subject: "Your Order Invoice",
+            templateName: "order-confirmation",
+            templateData: {
+                name: result.name,
+                orderId: result.id,
+                totalAmount: result.totalAmount,
+                address: `${result.address}, ${result.state}`,
+                items: result.items,
+                subtotal: result.subtotal,
+                shipping: result.deliveryCharge,
+                paymentMethod: result.paymentMethod,
+            },
+            attachments: [
+                {
+                    filename: `invoice-${result.id}.pdf`,
+                    content: pdfBuffer,
+                    contentType: "application/pdf",
+                },
+            ],
+        });
+    }
 
 
     // ================== OUTSIDE DB TRANSACTION ==================

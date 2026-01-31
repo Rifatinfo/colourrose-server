@@ -22,8 +22,6 @@ const createProduct = async (req: ExpressRequest & { files?: Express.Multer.File
 
     let imageUrls: string[] = [];
     if (files?.length) {
-        // const baseUrl = `${req.protocol}://${req.get("host")}`;
-
         for (const file of files) {
             const filename = await optimizeAndSaveImage(file, productFolder);
             imageUrls.push(

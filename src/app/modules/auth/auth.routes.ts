@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response } from "express"; 
+import express, { NextFunction, Request, Response } from "express";
 import { AuthController } from "./auth.controller";
 import passport from "passport";
 import config from "../../../config";
@@ -11,7 +11,7 @@ router.get(
   (req, res, next) => {
 
     // Capture the target frontend page if passed as a query param
-    const state = req.query.redirect as string || "/"; 
+    const state = req.query.redirect as string || "/";
     passport.authenticate("google", {
       scope: ["profile", "email"], //========== Explicitly define scopes here ==========//
       state: state,                //========== Pass state to maintain redirect URL ==========//
@@ -30,5 +30,9 @@ router.get(
   AuthController.googleCallbackController
 );
 
+router.post(
+  '/refresh-token',
+  AuthController.refreshToken
+)
 
 export const AuthRoutes = router;

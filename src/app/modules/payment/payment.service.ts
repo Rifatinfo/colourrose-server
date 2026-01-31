@@ -6,7 +6,6 @@ import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import { SSLService } from "../sslCommerz/sslCommerz.service";
 import { generateInvoice } from "../../../utiles/invoice";
 import { sendEmail } from "../../../utiles/sendEmail";
-import { parseDeliveryType } from "../../../utiles/parseDeliveryType";
 
 
 const successPayment = async (query: Record<string, string>) => {

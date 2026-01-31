@@ -25,6 +25,54 @@ router.post(
     UserController.createCustomer
 );
 
+/* ===============================================
+ ====================== Admin Created ============
+ ============================================== */
+
+router.post(
+    "/create-admin",
+    fileUploader.singleUpload("file"),
+    (req, _res, next) => {
+        try {
+            if (!req.body?.data) {
+                throw new Error("Admin data missing");
+            }
+
+            const parsed = JSON.parse(req.body.data);
+            req.body = UserValidation.createAdminValidationSchema.parse(parsed);
+
+            next();
+        } catch (error) {
+            next(error);
+        }
+    },
+    UserController.createAdmin
+);
+
+/* ===============================================
+ ====================== Shop Manager  ============
+ ============================================== */
+
+router.post(
+    "/create-shop-manager",
+    fileUploader.singleUpload("file"),
+    (req, _res, next) => {
+        try {
+            if (!req.body?.data) {
+                throw new Error("Shop Manager data missing");
+            }
+
+            const parsed = JSON.parse(req.body.data);
+            req.body = UserValidation.createAdminValidationSchema.parse(parsed);
+
+            next();
+        } catch (error) {
+            next(error);
+        }
+    },
+    UserController.createShopManager
+);
+
 router.get("/", UserController.getAllFromDB);
 
 export const UserRoutes = router;

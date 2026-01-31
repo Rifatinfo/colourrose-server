@@ -8,19 +8,18 @@ import { generateUniqueSlug } from "../../../utiles/generateSlug";
 import { Prisma, UserRole } from "@prisma/client";
 import { IOptions, paginationHelper } from "../../../utiles/paginationHelper";
 import { userSearchableFields } from "./user.constant";
-const createCustomer = async (req: Request & { file?: Express.Multer.File  }) => {
+const createCustomer = async (req: Request & { file?: Express.Multer.File }) => {
     const { name, email, password } = req.body;
 
     // ===== Generate slug =====
-  const slug = name ? await generateUniqueSlug(name.trim()) : `user-${crypto.randomBytes(6).toString("hex")}`;
-  let avatarUrl: string | null = null;
+    const slug = name ? await generateUniqueSlug(name.trim()) : `user-${crypto.randomBytes(6).toString("hex")}`;
+    let avatarUrl: string | null = null;
 
-  if (req.file) {
-    const userFolder = `users/${slug}`;
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-    const filename = await optimizeAndSaveImage(req.file, userFolder);
-    avatarUrl = `${baseUrl}/uploads/${userFolder}/${filename}`;
-  }
+    if (req.file) {
+        const userFolder = `users/${slug}`;
+        const filename = await optimizeAndSaveImage(req.file, userFolder);
+        avatarUrl = `/uploads/${userFolder}/${filename}`;
+    }
 
 
     // ===== Hash password =====
@@ -120,8 +119,110 @@ const getAllFromDB = async (params: any, options: IOptions) => {
     };
 }
 
+
+const createAdmin = async (req: Request & { file?: Express.Multer.File }) => {
+    const { name, email, password , phone} = req.body;
+
+    // ===== Generate slug =====
+    const slug = name ? await generateUniqueSlug(name.trim()) : `user-${crypto.randomBytes(6).toString("hex")}`;
+    let avatarUrl: string | null = null;
+
+    if (req.file) {
+        const userFolder = `users/${slug}`;
+        const filename = await optimizeAndSaveImage(req.file, userFolder);
+        avatarUrl = `/uploads/${userFolder}/${filename}`;
+    }
+
+
+    // ===== Hash password =====
+    const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS) || 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // ===== Prisma Transaction =====
+    const result = await prisma.$transaction(async (tx) => {
+        // 1 Create User
+        const user = await tx.user.create({
+            data: {
+                email,
+                name,
+                password: hashedPassword,
+                avatar: avatarUrl,
+                role: UserRole.ADMIN,
+            },
+        });
+
+
+        // 3 Create Admin Profile
+        const admin = await tx.admin.create({
+            data: {
+                userId: user.id,
+                name,
+                email,
+                phone,
+                avatar: avatarUrl,
+                password: hashedPassword,
+            },
+        });
+
+        return admin;
+    });
+
+    return result;
+};
+const createShopManager = async (req: Request & { file?: Express.Multer.File }) => {
+    const { name, email, password , phone} = req.body;
+    
+    // ===== Generate slug =====
+    const slug = name ? await generateUniqueSlug(name.trim()) : `user-${crypto.randomBytes(6).toString("hex")}`;
+    let avatarUrl: string | null = null;
+
+    if (req.file) {
+        const userFolder = `users/${slug}`;
+        const filename = await optimizeAndSaveImage(req.file, userFolder);
+        avatarUrl = `/uploads/${userFolder}/${filename}`;
+    }
+
+
+    // ===== Hash password =====
+    const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS) || 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // ===== Prisma Transaction =====
+    const result = await prisma.$transaction(async (tx) => {
+        // 1 Create User
+        const user = await tx.user.create({
+            data: {
+                email,
+                name,
+                password: hashedPassword,
+                avatar: avatarUrl,
+                role: UserRole.SHOP_MANAGER,
+            },
+        });
+
+
+        // 3 Create Shop Manager Profile
+        const shopManager = await tx.shopManager.create({
+            data: {
+                userId: user.id,
+                name,
+                email,
+                phone,
+                avatar: avatarUrl,
+                password: hashedPassword,
+            },
+        });
+
+        return shopManager;
+    });
+
+    return result;
+};
+
 export const UserService = {
     createCustomer,
-    getAllFromDB
+    getAllFromDB, 
+    createAdmin,
+    createShopManager
 };
 

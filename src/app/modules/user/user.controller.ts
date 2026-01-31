@@ -35,9 +35,34 @@ const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const createAdmin = catchAsync(async (req: Request & { file?: Express.Multer.File }, res: Response) => {
+ 
+    const result = await UserService.createAdmin(req);
+
+    sendResponse(res, {
+        statusCode : 201,
+        success : true,
+        message : "Admin Created Successfully",
+        data : result
+    });
+});
+const createShopManager = catchAsync(async (req: Request & { file?: Express.Multer.File }, res: Response) => {
+ 
+    const result = await UserService.createShopManager(req);
+
+    sendResponse(res, {
+        statusCode : 201,
+        success : true,
+        message : "Shop Manager Created Successfully",
+        data : result
+    });
+});
+
 export const UserController = {
     createCustomer,
-    getAllFromDB
+    getAllFromDB,
+    createAdmin,
+    createShopManager
 };
 
 

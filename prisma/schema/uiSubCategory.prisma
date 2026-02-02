@@ -1,0 +1,18 @@
+model UiSubCategory {
+  id        String   @id @default(uuid())
+  name      String
+  avatar    String?
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model UiSubCategoryMap {
+  id                 String @id @default(uuid())
+  uiSubCategoryId    String
+  realSubCategoryId  String
+
+  createdAt          DateTime @default(now())
+}

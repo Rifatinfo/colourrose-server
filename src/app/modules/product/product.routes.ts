@@ -3,13 +3,14 @@ import express from 'express';
 import { ProductController } from './product.controller';
 import { fileUploader } from '../../../utiles/fileUploader';
 import { createProductSchema } from './product.validation';
-
+import { UserRole } from '@prisma/client';
+import auth from '../../middlewares/auth';
 
 const router = express.Router();
 
-
 router.post(
     "/create",
+    auth(UserRole.SHOP_MANAGER),
     fileUploader.multipleUpload("file", 4),
     (req, _res, next) => {
         try {
@@ -30,7 +31,7 @@ router.post(
 
 router.get("/", ProductController.getAll);
 router.get("/slug/:slug", ProductController.getProductBySlug);
-router.delete("/:productId",  ProductController.deleteProduct);
+router.delete("/:productId", auth(UserRole.SHOP_MANAGER), ProductController.deleteProduct);
 router.get("/best-selling", ProductController.getBestSellingProducts);
 
 export const ProductRoutes = router;

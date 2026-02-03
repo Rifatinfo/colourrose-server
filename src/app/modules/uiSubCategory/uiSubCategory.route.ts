@@ -2,12 +2,15 @@ import express from "express";
 import { UiSubCategoryController } from "./uiSubCategory.controller";
 import { UiSubCategoryValidation } from "./uiSubCategory.validation";
 import { fileUploader } from "../../../utiles/fileUploader";
+import auth from "../../middlewares/auth";
+import { UserRole } from "@prisma/client";
 
 const router = express.Router();
 
 // CREATE
 router.post(
   "/create",
+  auth(UserRole.SHOP_MANAGER),
   fileUploader.singleUpload("file"),
   (req, _res, next) => {
     try {
@@ -25,11 +28,12 @@ router.post(
 );
 
 // GET ALL
-router.get("/", UiSubCategoryController.getAllUiSubCategories);
+router.get("/", auth(UserRole.SHOP_MANAGER), UiSubCategoryController.getAllUiSubCategories);
 
 // UPDATE
 router.patch(
   "/:id",
+  auth(UserRole.SHOP_MANAGER),
   fileUploader.singleUpload("file"),
   (req, _res, next) => {
     try {
@@ -46,6 +50,6 @@ router.patch(
 );
 
 // DELETE
-router.delete("/:id", UiSubCategoryController.deleteUiSubCategory);
+router.delete("/:id", auth(UserRole.SHOP_MANAGER), UiSubCategoryController.deleteUiSubCategory);
 
 export const UiSubCategoryRoutes = router;

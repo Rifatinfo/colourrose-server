@@ -2,7 +2,8 @@ import { Router } from "express";
 import { UiCategoryController } from "./uiCategory.controller";
 import { fileUploader } from "../../../utiles/fileUploader";
 import { UiCategoryValidation } from "./uiCategory.validation";
-
+import { UserRole } from "@prisma/client";
+import auth from "../../middlewares/auth";
 
 const router = Router();
 
@@ -13,7 +14,8 @@ const router = Router();
  */
 router.post(
   "/create",
-  fileUploader.singleUpload("file"), // 
+  fileUploader.singleUpload("file"), 
+  auth(UserRole.SHOP_MANAGER),
   (req, _res, next) => {
     try {
       if (!req.body?.data) {
@@ -37,7 +39,7 @@ router.post(
  * GET ALL UI CATEGORIES
  * ======================
  */
-router.get("/", UiCategoryController.getAllUiCategories);
+router.get("/", auth(UserRole.SHOP_MANAGER), UiCategoryController.getAllUiCategories);
 
 /**
  * ======================
@@ -47,6 +49,7 @@ router.get("/", UiCategoryController.getAllUiCategories);
 router.patch(
   "/:id",
   fileUploader.singleUpload("file"),
+  auth(UserRole.SHOP_MANAGER),
   (req, _res, next) => {
     try {
       if (req.body?.data) {
@@ -69,6 +72,7 @@ router.patch(
  */
 router.delete(
   "/:id",
+  auth(UserRole.SHOP_MANAGER),
   UiCategoryController.deleteUiCategory
 );
 

@@ -2,6 +2,8 @@ import express from "express";
 import { UiSubCategoryController } from "./uiSubCategory.controller";
 import { UiSubCategoryValidation } from "./uiSubCategory.validation";
 import { fileUploader } from "../../../utiles/fileUploader";
+import auth from "../../middlewares/auth";
+import { UserRole } from "@prisma/client";
 
 const router = express.Router();
 
@@ -9,6 +11,7 @@ const router = express.Router();
 router.post(
   "/create",
   fileUploader.singleUpload("file"),
+  auth(UserRole.SHOP_MANAGER),
   (req, _res, next) => {
     try {
       if (!req.body?.data) throw new Error("UiSubCategory data missing");
@@ -25,7 +28,7 @@ router.post(
 );
 
 // GET ALL
-router.get("/", UiSubCategoryController.getAllUiSubCategories);
+router.get("/", auth(UserRole.SHOP_MANAGER),UiSubCategoryController.getAllUiSubCategories);
 
 // UPDATE
 router.patch(
@@ -46,6 +49,6 @@ router.patch(
 );
 
 // DELETE
-router.delete("/:id", UiSubCategoryController.deleteUiSubCategory);
+router.delete("/:id", auth(UserRole.SHOP_MANAGER),UiSubCategoryController.deleteUiSubCategory);
 
 export const UiSubCategoryRoutes = router;

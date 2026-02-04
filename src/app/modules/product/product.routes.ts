@@ -3,6 +3,8 @@ import express from 'express';
 import { ProductController } from './product.controller';
 import { fileUploader } from '../../../utiles/fileUploader';
 import { createProductSchema } from './product.validation';
+import auth from '../../middlewares/auth';
+import { UserRole } from '@prisma/client';
 
 
 const router = express.Router();
@@ -10,6 +12,7 @@ const router = express.Router();
 
 router.post(
     "/create",
+    auth(UserRole.SHOP_MANAGER),
     fileUploader.multipleUpload("file", 4),
     (req, _res, next) => {
         try {

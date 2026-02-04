@@ -137,6 +137,10 @@ const createProduct = async (req: ExpressRequest & { files?: Express.Multer.File
     });
 };
 
+
+
+
+
 const getProducts = async (params: any, options: IOptions) => {
     const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(options);
     const { searchTerm, category, subCategory, ...filterData } = params;

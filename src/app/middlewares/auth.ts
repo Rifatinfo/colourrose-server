@@ -24,10 +24,13 @@ const auth = (...roles: string[]) => {
             const verifiedUser = jwtHelper.verifyToken(token, config.JWT_SECRET as Secret);
 
             req.user = {
-                id: verifiedUser.id, 
+                id: verifiedUser.id,
                 role: verifiedUser.role,
                 email: verifiedUser.email ?? null,
             };
+            console.log("Token:", token);
+            console.log("Decoded:", verifiedUser);
+            console.log("Required Roles:", roles);
 
             if (roles.length && !roles.includes(verifiedUser.role)) {
                 throw new AppError(StatusCodes.FORBIDDEN, "You are not allowed to access this resource");

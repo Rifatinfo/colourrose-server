@@ -31,7 +31,7 @@ router.post(
 
 router.get("/", ProductController.getAll);
 router.get("/slug/:slug", ProductController.getProductBySlug);
-router.delete("/:productId", auth(UserRole.SHOP_MANAGER), ProductController.deleteProduct);
+router.delete("/:productId", auth(UserRole.SHOP_MANAGER, UserRole.ADMIN), ProductController.deleteProduct);
 router.get("/best-selling", ProductController.getBestSellingProducts);
 
 export const ProductRoutes = router;

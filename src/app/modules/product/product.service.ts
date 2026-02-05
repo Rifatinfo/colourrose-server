@@ -1,7 +1,7 @@
 import prisma from "../../../shared/prisma";
 import { Request as ExpressRequest } from "express";
 import { optimizeAndSaveImage } from "../../../utiles/imageOptimizer";
-import { CreateProductInput } from "./product.validation";
+import { CreateProductInput, UpdateProductInput } from "./product.validation";
 import { generateUniqueSlug } from "../../../utiles/generateSlug";
 import { IOptions, paginationHelper } from "../../../utiles/paginationHelper";
 import { Prisma } from "@prisma/client";
@@ -137,6 +137,139 @@ const createProduct = async (req: ExpressRequest & { files?: Express.Multer.File
     });
 };
 
+const updateProduct = async (
+    productId: string,
+    req: ExpressRequest & { files?: Express.Multer.File[] }
+) => {
+    const data = req.body as UpdateProductInput;
+
+    const existingProduct = await prisma.product.findUnique({
+        where: { id: productId },
+        include: { images: true },
+    });
+
+    if (!existingProduct) {
+        throw new Error("Product not found");
+    }
+
+    // ===== Slug update (only if name changes) =====
+    let slug = existingProduct.slug;
+    if (data.name && data.name !== existingProduct.name) {
+        slug = await generateUniqueSlug(data.name);
+    }
+
+    // ===== Handle Images =====
+    const files = req.files ?? [];
+    const productFolder = `products/${slug}`;
+
+    let imageUrls: string[] = [];
+    if (files.length) {
+        for (const file of files) {
+            const filename = await optimizeAndSaveImage(file, productFolder);
+            imageUrls.push(`/uploads/${productFolder}/${filename}`);
+        }
+    }
+
+    return prisma.product.update({
+        where: { id: productId },
+        data: {
+            name: data.name,
+            slug,
+            sku: data.sku,
+            regularPrice: data.regularPrice,
+            salePrice: data.salePrice,
+            stockQuantity: data.stockQuantity,
+            stockStatus: data.stockStatus,
+            shortDescription: data.shortDescription,
+            fullDescription: data.fullDescription,
+
+            // ===== Replace Images (optional) =====
+            images: imageUrls.length
+                ? {
+                    deleteMany: {},
+                    create: imageUrls.map((url) => ({ url })),
+                }
+                : undefined,
+
+            // ===== Categories =====
+            categories: data.categories
+                ? {
+                    deleteMany: {},
+                    create: data.categories.map((category) => ({
+                        category: {
+                            connectOrCreate: {
+                                where: { id: category },
+                                create: { id: category, name: category },
+                            },
+                        },
+                    })),
+                }
+                : undefined,
+
+            // ===== SubCategories =====
+            subCategories: data.subCategories
+                ? {
+                    deleteMany: {},
+                    create: data.subCategories.map((subCategory: any) => ({
+                        subCategory: {
+                            connectOrCreate: {
+                                where: { id: subCategory.id ?? subCategory },
+                                create: {
+                                    id: subCategory.id ?? subCategory,
+                                    name: subCategory.name ?? subCategory,
+                                    parentId: subCategory.parentId || null,
+                                },
+                            },
+                        },
+                    })),
+                }
+                : undefined,
+
+            // ===== Variants =====
+            variants: data.variants
+                ? {
+                    deleteMany: {},
+                    create: data.variants.map((variant) => ({
+                        color: variant.color,
+                        size: variant.size,
+                        quantity: variant.quantity ?? 0,
+                    })),
+                }
+                : undefined,
+
+            // ===== Tags =====
+            tags: data.tags
+                ? {
+                    set: [],
+                    connectOrCreate: data.tags.map((tagName) => ({
+                        where: { name: tagName },
+                        create: { name: tagName },
+                    })),
+                }
+                : undefined,
+
+            // ===== Additional Info =====
+            additionalInformation: data.additionalInformation
+                ? {
+                    deleteMany: {},
+                    create: data.additionalInformation.map((info) => ({
+                        label: info.label,
+                        value: info.value,
+                    })),
+                }
+                : undefined,
+        },
+        include: {
+            categories: true,
+            subCategories: true,
+            variants: true,
+            images: true,
+            additionalInformation: true,
+            tags: true,
+        },
+    });
+};
+
 const getProducts = async (params: any, options: IOptions) => {
     const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(options);
     const { searchTerm, category, subCategory, ...filterData } = params;
@@ -266,7 +399,7 @@ const deleteProduct = async (productId: string) => {
 
 
 const getBestSellingProducts = async () => {
-   //=============== GET TOP 3 PRODUCTS FROM ORDER ITEMS ================//
+    //=============== GET TOP 3 PRODUCTS FROM ORDER ITEMS ================//
     const bestSelling = await prisma.orderItem.groupBy({
         by: ['productId'],
         _sum: { quantity: true },
@@ -275,7 +408,7 @@ const getBestSellingProducts = async () => {
         },
         take: 3,
     });
-    
+
     const productIds = bestSelling.map(item => item.productId);
 
     // Fetch full product data for these product IDs
@@ -306,5 +439,6 @@ export const ProductService = {
     getProducts,
     getProductBySlug,
     deleteProduct,
-    getBestSellingProducts
+    getBestSellingProducts,
+    updateProduct,
 }

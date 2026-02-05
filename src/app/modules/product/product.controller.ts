@@ -16,6 +16,19 @@ const createProduct = catchAsync(async (req: Request, res: Response) => {
         data: product
     });
 })
+const updateProduct = catchAsync(async (req: Request, res: Response) => {
+    const product = await ProductService.updateProduct(
+        req.params.id,
+        req as Request & { files?: Express.Multer.File[] }
+    );
+
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Product updated successfully",
+        data: product,
+    });
+});
 
 const getAll = catchAsync(async (req: Request, res: Response) => {
     //================= searching , filtering ================//
@@ -78,5 +91,6 @@ export const ProductController = {
     getAll,
     getProductBySlug,
     deleteProduct,
-    getBestSellingProducts
+    getBestSellingProducts,
+    updateProduct,
 }

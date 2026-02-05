@@ -2,7 +2,7 @@
 import express from 'express';
 import { ProductController } from './product.controller';
 import { fileUploader } from '../../../utiles/fileUploader';
-import { createProductSchema } from './product.validation';
+import { createProductSchema, updateProductSchema } from './product.validation';
 import { UserRole } from '@prisma/client';
 import auth from '../../middlewares/auth';
 
@@ -27,6 +27,27 @@ router.post(
         }
     },
     ProductController.createProduct
+);
+
+router.patch(
+    "/:id",
+    auth(UserRole.SHOP_MANAGER),
+    fileUploader.multipleUpload("file", 4),
+    (req, _res, next) => {
+        try {
+            if (!req.body?.data) {
+                throw new Error("Product data missing");
+            }
+
+            const parsed = JSON.parse(req.body.data);
+            req.body = updateProductSchema.parse(parsed);
+
+            next();
+        } catch (error) {
+            next(error);
+        }
+    },
+    ProductController.updateProduct
 );
 
 router.get("/", ProductController.getAll);

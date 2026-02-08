@@ -7,6 +7,11 @@ import { UserRole } from "@prisma/client";
 const router = Router();
 
 router.post("/", auth(UserRole.CUSTOMER) , OrderController.createOrderController);
+router.get("/", auth(UserRole.SHOP_MANAGER, UserRole.ADMIN), OrderController.getAllOrdersController);
+router.get("/my-orders", auth(UserRole.CUSTOMER), OrderController.getMyOrdersController);
+router.patch("/:orderId/status", auth(UserRole.SHOP_MANAGER),OrderController.updateOrderStatusController);
+router.get("/:orderId/tracking", auth(UserRole.CUSTOMER), OrderController.getOrderTrackingController);
+
 
 export const OrderRoutes = router;
 

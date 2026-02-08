@@ -4,11 +4,13 @@ import { DELIVERY_CHARGE } from "../../../config/delivery.config";
 import { CreateOrderDTO } from "./order.interface";
 import prisma from "../../../shared/prisma";
 import { Decimal } from "@prisma/client/runtime/client";
-import { PaymentMethod, PaymentStatus } from "@prisma/client";
+import { OrderStatus, PaymentMethod, PaymentStatus, Prisma } from "@prisma/client";
 import { SSLService } from "../sslCommerz/sslCommerz.service";
 import { generateInvoice } from "../../../utiles/invoice";
 import { sendEmail } from "../../../utiles/sendEmail";
 import { parseDeliveryType } from "../../../utiles/parseDeliveryType";
+import { paginationHelper } from "../../../utiles/paginationHelper";
+import { orderSearchableFields } from "./order.constant";
 
 const getTransactionId = () => {
     return 'TXN_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
@@ -225,6 +227,173 @@ export const createOrderService = async (
     };
 };
 
+
+//=================== All Order get ===================// 
+const getAllOrdersService = async (params: any,
+    options: any) => {
+    const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(options);
+    const { searchTerm, ...filterData } = params;
+    const andConditions: Prisma.OrderWhereInput[] = [];
+    // ============ Search  =============// 
+    if (searchTerm) {
+        andConditions.push({
+            OR: orderSearchableFields.map(field => ({
+                [field]: {
+                    contains: searchTerm,
+                    mode: "insensitive",
+                },
+            })),
+        });
+    }
+
+
+    //=================== Filters  =================//
+    if (Object.keys(filterData).length > 0) {
+        andConditions.push({
+            AND: Object.keys(filterData).map(key => ({
+                [key]: {
+                    equals: (filterData as any)[key],
+                },
+            })),
+        });
+    }
+
+    const whereCondition: Prisma.OrderWhereInput =
+        andConditions.length > 0 ? { AND: andConditions } : {};
+
+
+    const orders = await prisma.order.findMany({
+        skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: sortOrder,
+        },
+        where: whereCondition,
+        include: {
+            items: true,
+            payment: true,
+            shipmentTrackings : true,
+            user: {
+                select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                },
+            },
+        },
+    });
+    const total = await prisma.order.count({ where: whereCondition });
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+        },
+        data: orders,
+    };
+};
+
+const getMyOrdersService = async (
+    userId: string,
+    params: any,
+    options: any
+) => {
+    const { page, limit, skip, sortBy, sortOrder } =
+        paginationHelper.calculatePagination(options);
+    const { searchTerm, ...filterData } = params;
+    const andConditions: Prisma.OrderWhereInput[] = [
+        { userId }
+    ];
+
+    if (searchTerm) {
+        andConditions.push({
+            OR: orderSearchableFields.map(field => ({
+                [field]: {
+                    contains: searchTerm,
+                    mode: "insensitive",
+                },
+            })),
+        });
+    }
+
+    if (Object.keys(filterData).length > 0) {
+        andConditions.push({
+            AND: Object.keys(filterData).map(key => ({
+                [key]: {
+                    equals: (filterData as any)[key],
+                },
+            })),
+        });
+    }
+
+    const whereCondition: Prisma.OrderWhereInput = { AND: andConditions };
+    const orders = await prisma.order.findMany({
+        skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: sortOrder,
+        },
+        where: whereCondition,
+        include: {
+            items: true,
+            payment: true,
+        },
+    });
+
+    const total = await prisma.order.count({ where: whereCondition });
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+        },
+        data: orders,
+    };
+
+}
+
+const updateOrderStatusService = async (
+    orderId: string,
+    status: OrderStatus
+) => {
+    return prisma.order.update({
+        where: { id: orderId },
+        data: { orderStatus: status },
+    });
+};
+
+const getOrderTrackingService = async (
+    orderId: string,
+    userId: string
+) => {
+    const order = await prisma.order.findFirst({
+        where: {
+            id: orderId,
+            userId, //  user can see only own order
+        },
+        include: {
+            shipmentTrackings: {
+                orderBy: { createdAt: "desc" },
+            },
+        },
+    });
+
+    if (!order) {
+        throw new AppError(404, "Order not found");
+    }
+
+    return {
+        orderStatus: order.orderStatus,
+        shipmentTimeline: order.shipmentTrackings,
+        createdAt: order.createdAt,
+    };
+};
+
 export const OrderService = {
-    createOrderService
+    createOrderService,
+    getAllOrdersService,
+    getMyOrdersService,
+    updateOrderStatusService,
+    getOrderTrackingService
 }

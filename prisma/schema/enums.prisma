@@ -29,9 +29,13 @@ enum OrderStatus {
   PENDING
   CONFIRMED
   CANCELED
-  DELIVERED
   FAILED
   EXPIRED
+
+  PLACED       // frontend only
+  PROCESSING   // frontend only
+  SHIPPED
+  DELIVERED
 }
 
 // ========= Payment Related ========//
@@ -51,4 +55,13 @@ enum PaymentMethod {
 enum DeliveryType {
   INSIDE_DHAKA
   OUTSIDE_DHAKA
+}
+
+enum ShipmentStatus {
+  ORDER_CONFIRMED
+  PACKAGE_SHIPPED
+  ARRIVED_AT_LOCAL_SORT_FACILITY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELED 
 }

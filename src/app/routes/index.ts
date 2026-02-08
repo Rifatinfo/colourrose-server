@@ -8,6 +8,7 @@ import { AdminRoutes } from "../modules/admin/admin.routes";
 import { ShopRoutes } from "../modules/shop-manager/shop.routes";
 import { UiCategoryRoutes } from "../modules/ui-category/uiCategory.route";
 import { UiSubCategoryRoutes } from "../modules/uiSubCategory/uiSubCategory.route";
+import { OrderShipment } from "../modules/shipment/shipment.route";
 
 
 export const router = Router();
@@ -40,6 +41,10 @@ const moduleRouters = [
     {
         path : "/shop-manager",
         route : ShopRoutes
+    },
+    {
+        path : "/shipment",
+        route : OrderShipment
     },
     {
         path : "/order",

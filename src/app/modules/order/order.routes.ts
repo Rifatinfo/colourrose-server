@@ -11,6 +11,7 @@ router.get("/", auth(UserRole.SHOP_MANAGER, UserRole.ADMIN), OrderController.get
 router.get("/my-orders", auth(UserRole.CUSTOMER), OrderController.getMyOrdersController);
 router.patch("/:orderId/status", auth(UserRole.SHOP_MANAGER),OrderController.updateOrderStatusController);
 router.get("/:orderId/tracking", auth(UserRole.CUSTOMER), OrderController.getOrderTrackingController);
+router.get("/:orderId", auth(UserRole.CUSTOMER, UserRole.ADMIN), OrderController.getSingleOrderController);
 
 
 export const OrderRoutes = router;

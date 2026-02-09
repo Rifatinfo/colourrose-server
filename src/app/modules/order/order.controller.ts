@@ -127,11 +127,32 @@ const getOrderTrackingController = catchAsync(
   }
 );
 
+// single order traking 
+const getSingleOrderController = catchAsync(async (req: Request & { user?: any }, res: Response) => {
+    const { orderId } = req.params;
+    const user = req.user; 
+
+    const result = await OrderService.getSingleOrderService(
+      orderId,
+      user
+    );
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Order fetched successfully",
+      data: result,
+    });
+  }
+);
+
+
 export const OrderController = {
   createOrderController,
   getAllOrdersController,
   getMyOrdersController,
   updateOrderStatusController,
-  getOrderTrackingController
+  getOrderTrackingController,
+  getSingleOrderController
 };
 

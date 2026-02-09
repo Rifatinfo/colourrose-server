@@ -11,6 +11,7 @@ import { sendEmail } from "../../../utiles/sendEmail";
 import { parseDeliveryType } from "../../../utiles/parseDeliveryType";
 import { paginationHelper } from "../../../utiles/paginationHelper";
 import { orderSearchableFields } from "./order.constant";
+import ApiError from "../../errors/ApiError";
 
 const getTransactionId = () => {
     return 'TXN_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
@@ -272,7 +273,7 @@ const getAllOrdersService = async (params: any,
         include: {
             items: true,
             payment: true,
-            shipmentTrackings : true,
+            shipmentTrackings: true,
             user: {
                 select: {
                     id: true,
@@ -390,10 +391,83 @@ const getOrderTrackingService = async (
     };
 };
 
+const getSingleOrderService = async (
+    orderId: string,
+    user: any
+) => {
+    const whereCondition: Prisma.OrderWhereInput = {
+        id: orderId,
+    };
+
+    //  If user role is CUSTOMER, restrict access
+    if (user.role === "CUSTOMER") {
+        whereCondition.userId = user.id;
+    }
+
+    const order = await prisma.order.findFirst({
+        where: whereCondition,
+        include: {
+            items: true,
+            payment: true,
+
+            //  Shipment Tracking Timeline
+            shipmentTrackings: {
+                orderBy: {
+                    createdAt: "asc",
+                },
+            },
+
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                },
+            },
+        },
+    });
+
+    if (!order) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Order not found");
+    }
+
+    return {
+        id: order.id,
+        orderStatus: order.orderStatus,
+        paymentStatus: order.paymentStatus,
+        paymentMethod: order.paymentMethod,
+
+        subtotal: order.subtotal,
+        totalAmount: order.totalAmount,
+
+        shippingAddress: {
+            name: order.name,
+            phone: order.phone,
+            state: order.state,
+            address: order.address,
+        },
+
+        items: order.items,
+
+        //  full tracking history
+        shipmentTrackings: order.shipmentTrackings,
+
+        //  current shipment status (latest)
+        currentShipmentStatus:
+            order.shipmentTrackings.length > 0
+                ? order.shipmentTrackings[order.shipmentTrackings.length - 1].status
+                : "ORDER_CONFIRMED",
+
+        createdAt: order.createdAt,
+    };
+};
+
+
 export const OrderService = {
     createOrderService,
     getAllOrdersService,
     getMyOrdersService,
     updateOrderStatusService,
-    getOrderTrackingService
+    getOrderTrackingService,
+    getSingleOrderService
 }

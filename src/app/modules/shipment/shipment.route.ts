@@ -6,5 +6,8 @@ import auth from "../../middlewares/auth";
 const router = Router();
 
 router.post("/:orderId", auth(UserRole.SHOP_MANAGER, UserRole.ADMIN), ShipmentController.addShipmentTrackingController);
-
+router.get(
+  "/:orderId/tracking",
+  ShipmentController.getShipmentTrackingController
+);
 export const OrderShipment = router;

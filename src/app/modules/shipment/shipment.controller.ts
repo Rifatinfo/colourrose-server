@@ -42,7 +42,31 @@ const addShipmentTrackingController = catchAsync(
     }
 );
 
+const getShipmentTrackingController = catchAsync(
+  async (req: Request, res: Response) => {
+    const { orderId } = req.params;
+
+    if (!orderId) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Order ID is required"
+      );
+    }
+
+    const result =
+      await ShipmentService.getShipmentTrackingService(orderId);
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Shipment tracking fetched successfully",
+      data: result,
+    });
+  }
+);
+
 export const ShipmentController = {
-    addShipmentTrackingController
+    addShipmentTrackingController,
+    getShipmentTrackingController,
 };
 

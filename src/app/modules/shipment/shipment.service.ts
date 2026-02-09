@@ -85,6 +85,41 @@ const addShipmentTrackingService = async (
 };
 
 
+const getShipmentTrackingService = async (orderId: string) => {
+    // 1️⃣ Check order exists
+    const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: {
+            id: true,
+            orderStatus: true,
+        },
+    });
+
+    if (!order) {
+        throw new AppError(
+            StatusCodes.NOT_FOUND,
+            "Order not found"
+        );
+    }
+
+    // 2️⃣ Get shipment tracking history
+    const trackings = await prisma.shipmentTracking.findMany({
+        where: { orderId },
+        orderBy: { createdAt: "asc" },
+    });
+
+    return {
+        orderId: order.id,
+        orderStatus: order.orderStatus,
+        shipmentTrackings: trackings,
+        latestTracking: trackings.length
+            ? trackings[trackings.length - 1]
+            : null,
+    };
+};
+
+
 export const ShipmentService = {
     addShipmentTrackingService,
+    getShipmentTrackingService,
 }

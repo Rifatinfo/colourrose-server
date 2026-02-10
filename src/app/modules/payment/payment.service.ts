@@ -6,6 +6,7 @@ import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import { SSLService } from "../sslCommerz/sslCommerz.service";
 import { generateInvoice } from "../../../utiles/invoice";
 import { sendEmail } from "../../../utiles/sendEmail";
+import { saveInvoicePdf } from "../../../utiles/invoiceUrl";
 
 
 const successPayment = async (query: Record<string, string>) => {
@@ -63,7 +64,7 @@ const successPayment = async (query: Record<string, string>) => {
     });
     const order = payment.order;
     console.log(order.deliveryType);
-    
+
     //================ GENERATE INVOICE =================//
     const pdfBuffer = await generateInvoice({
         id: order.id,
@@ -73,8 +74,8 @@ const successPayment = async (query: Record<string, string>) => {
         state: order.state,
         paymentMethod: "Online Payment (SSLCommerz)",
         paymentStatus: "PAID",
-        deliveryType: order.deliveryType === "OUTSIDE_DHAKA" ? "outside_dhaka" : "inside_dhaka",       
-        deliveryCharge: Number(order.deliveryCharge), 
+        deliveryType: order.deliveryType === "OUTSIDE_DHAKA" ? "outside_dhaka" : "inside_dhaka",
+        deliveryCharge: Number(order.deliveryCharge),
         subtotal: order.subtotal,
         totalAmount: order.totalAmount,
         createdAt: order.createdAt,
@@ -88,7 +89,18 @@ const successPayment = async (query: Record<string, string>) => {
         })),
     });
 
+    //================ SAVE INVOICE LOCALLY =================//
+    const invoiceUrl = await saveInvoicePdf(pdfBuffer, `invoice-${order.id}`);
+    console.log("invoiceUrl", invoiceUrl);
+    //================ UPDATE PAYMENT WITH INVOICE URL =================//
+    await prisma.payment.update({
+        where: { id: payment.id },
+        data: { invoiceUrl },
+    });
 
+    payment.invoiceUrl = invoiceUrl;
+    console.log("payment.invoiceUrl", payment.invoiceUrl);
+    
     //================ SEND EMAIL =================//
     await sendEmail({
         to: order.user?.email || "",

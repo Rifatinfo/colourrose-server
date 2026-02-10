@@ -12,6 +12,7 @@ import { parseDeliveryType } from "../../../utiles/parseDeliveryType";
 import { paginationHelper } from "../../../utiles/paginationHelper";
 import { orderSearchableFields } from "./order.constant";
 import ApiError from "../../errors/ApiError";
+import { saveInvoicePdf } from "../../../utiles/invoiceUrl";
 
 const getTransactionId = () => {
     return 'TXN_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
@@ -41,6 +42,9 @@ export const createOrderService = async (
             cartItems.map(async (item) => {
                 const product = await tx.product.findUnique({
                     where: { id: item.productId },
+                    include: {
+                        images: true, // <--- include images relation
+                    },
                 });
                 if (!product) throw new AppError(StatusCodes.NOT_FOUND, "Product not found");
 
@@ -74,6 +78,7 @@ export const createOrderService = async (
                     total,
                     color: item.color,
                     size: item.size,
+                    productImage: product.images[0]?.url || null,
                 };
             })
         );
@@ -127,19 +132,32 @@ export const createOrderService = async (
 
 
         // ========== CREATE PAYMENT (ONLY ONLINE) ==========
-        let payment = null;
-        if (paymentMethod === "ONLINE") {
-            payment = await tx.payment.create({
-                data: {
-                    orderId: order.id,
-                    transactionId: getTransactionId(), // you generate unique transaction id
-                    paymentStatus: PaymentStatus.UNPAID,
-                    amount: new Decimal(totalAmount),
-                    currency: "BDT",
-                    paymentMethod: "SSLCommerz",
-                },
-            });
-        }
+        // let payment = null;
+        // if (paymentMethod === "ONLINE") {
+        //     payment = await tx.payment.create({
+        //         data: {
+        //             orderId: order.id,
+        //             transactionId: getTransactionId(), // you generate unique transaction id
+        //             paymentStatus: PaymentStatus.UNPAID,
+        //             amount: new Decimal(totalAmount),
+        //             currency: "BDT",
+        //             paymentMethod: "SSLCommerz",
+        //         },
+        //     });
+        // }
+        // ========== CREATE PAYMENT (ONLINE + COD) ========== //
+        const payment = await tx.payment.create({
+            data: {
+                orderId: order.id,
+                transactionId: getTransactionId(),
+                paymentStatus: PaymentStatus.UNPAID,
+                amount: new Decimal(totalAmount),
+                currency: "BDT",
+                paymentMethod: paymentMethod === "ONLINE" ? "SSLCommerz" : "COD",
+                invoiceUrl: null, // placeholder
+            },
+        });
+
 
         return { ...order, deliveryType, deliveryCharge, payment };
     });
@@ -148,6 +166,7 @@ export const createOrderService = async (
     // =====================================================
     //  IMPORTANT PART — INVOICE FOR CASH ON DELIVERY
     // =====================================================
+    let invoiceUrl: string | null = null;
     if (paymentMethod === "COD") {
 
         //  Generate PDF (BUFFER)
@@ -175,7 +194,18 @@ export const createOrderService = async (
             })),
         });
 
-        // 🔹 Send email with invoice attached
+        invoiceUrl = await saveInvoicePdf(pdfBuffer, `invoice-${result.id}`);
+        console.log("invoiceUrlllllllllllllllll", invoiceUrl);
+        console.log("payment", result.payment);
+        //  UPDATE PAYMENT TABLE
+        await prisma.payment.update({
+            where: { id: result.payment.id },
+            data: { invoiceUrl },
+        });
+
+        result.payment.invoiceUrl = invoiceUrl;
+        console.log("result", result.payment);
+        //  Send email with invoice attached
         await sendEmail({
             to: userEmail,
             subject: "Your Order Invoice",
@@ -272,6 +302,7 @@ const getAllOrdersService = async (params: any,
         where: whereCondition,
         include: {
             items: true,
+
             payment: true,
             shipmentTrackings: true,
             user: {
@@ -337,10 +368,47 @@ const getMyOrdersService = async (
         },
         where: whereCondition,
         include: {
-            items: true,
+            // items: true,
+            items: {
+                include: {
+                    product: {
+                        include: {
+                            images: true
+                        },
+                    },
+                },
+            },
             payment: true,
         },
     });
+    const formattedOrders = orders.map(order => ({
+        id: order.id,
+        totalAmount: order.totalAmount,
+        orderStatus: order.orderStatus,
+        createdAt: order.createdAt,
+        items: order.items.map(item => ({
+            id: item.id,
+            orderId: item.orderId,
+            productId: item.productId,
+            productName: item.productName,
+            price: item.price,
+            quantity: item.quantity,
+            total: item.total,
+            color: item.color,
+            size: item.size,
+            productImage: item.productImage,
+        })),
+    }));
+    console.log(
+        JSON.stringify(
+            orders.map(o => o.items.map(i => ({
+                orderId: i.orderId,
+                productImage: i.productImage
+            }))),
+            null,
+            2
+        )
+    );
 
     const total = await prisma.order.count({ where: whereCondition });
     return {
@@ -349,7 +417,7 @@ const getMyOrdersService = async (
             limit,
             total,
         },
-        data: orders,
+        data: formattedOrders,
     };
 
 }

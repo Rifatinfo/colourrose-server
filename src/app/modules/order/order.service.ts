@@ -197,6 +197,14 @@ export const createOrderService = async (
         invoiceUrl = await saveInvoicePdf(pdfBuffer, `invoice-${result.id}`);
         console.log("invoiceUrlllllllllllllllll", invoiceUrl);
         console.log("payment", result.payment);
+
+
+        const updatedOrder = await prisma.order.update({
+            where: { id: result.id },
+            data: { invoiceUrl },
+        });
+        console.log("Update order :", updatedOrder)
+
         //  UPDATE PAYMENT TABLE
         await prisma.payment.update({
             where: { id: result.payment.id },
@@ -204,6 +212,8 @@ export const createOrderService = async (
         });
 
         result.payment.invoiceUrl = invoiceUrl;
+        result.invoiceUrl = invoiceUrl;
+
         console.log("result", result.payment);
         //  Send email with invoice attached
         await sendEmail({
@@ -252,6 +262,7 @@ export const createOrderService = async (
     }
 
     // ========== COD ==========
+   
     return {
         order: result,
         deliveryCharge: result.deliveryCharge,
